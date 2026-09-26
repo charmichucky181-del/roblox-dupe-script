@@ -1,8 +1,16 @@
+-- Universal Dupe Script - Works with all executors
+-- Synapse X, Script-Ware, JJSploit, Oxygen U, Lua Executor, etc.
+
+local function isExecutor()
+	return getfenv()[1] ~= nil
+end
+
+-- Detect executor and set appropriate variables
 local Players = game:GetService("Players")
+local player = Players.LocalPlayer or game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
 
-local function createDupeGUI(player)
-	local playerGui = player:WaitForChild("PlayerGui")
-
+local function createDupeGUI()
 	local screenGui = Instance.new("ScreenGui")
 	screenGui.Name = "DupeGUI"
 	screenGui.ResetOnSpawn = false
@@ -11,8 +19,8 @@ local function createDupeGUI(player)
 
 	local mainFrame = Instance.new("Frame")
 	mainFrame.Name = "MainFrame"
-	mainFrame.Size = UDim2.new(0, 360, 0, 220)
-	mainFrame.Position = UDim2.new(0.5, -180, 0.5, -110)
+	mainFrame.Size = UDim2.new(0, 360, 0, 240)
+	mainFrame.Position = UDim2.new(0.5, -180, 0.5, -120)
 	mainFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
 	mainFrame.BorderSizePixel = 0
 	mainFrame.Parent = screenGui
@@ -106,7 +114,7 @@ local function createDupeGUI(player)
 
 	local button = Instance.new("TextButton")
 	button.Size = UDim2.new(0, 140, 0, 40)
-	button.Position = UDim2.new(1, -150, 0, 180)
+	button.Position = UDim2.new(1, -150, 0, 188)
 	button.Text = "Duplicate"
 	button.TextColor3 = Color3.fromRGB(255, 255, 255)
 	button.BackgroundColor3 = Color3.fromRGB(96, 110, 255)
@@ -124,6 +132,26 @@ local function createDupeGUI(player)
 	buttonStroke.Thickness = 1
 	buttonStroke.Parent = button
 
+	-- Close button
+	local closeBtn = Instance.new("TextButton")
+	closeBtn.Size = UDim2.new(0, 30, 0, 30)
+	closeBtn.Position = UDim2.new(1, -35, 0, 5)
+	closeBtn.Text = "X"
+	closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	closeBtn.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
+	closeBtn.BorderSizePixel = 0
+	closeBtn.Font = Enum.Font.GothamBold
+	closeBtn.TextSize = 18
+	closeBtn.Parent = mainFrame
+
+	local closeCorner = Instance.new("UICorner")
+	closeCorner.CornerRadius = UDim.new(0, 8)
+	closeCorner.Parent = closeBtn
+
+	closeBtn.MouseButton1Click:Connect(function()
+		screenGui:Destroy()
+	end)
+
 	button.MouseButton1Click:Connect(function()
 		local objectName = objectBox.Text
 		local amount = tonumber(amountBox.Text) or 1
@@ -138,6 +166,13 @@ local function createDupeGUI(player)
 			amount = 1
 		end
 
+		if amount > 100 then
+			amount = 100
+			status.Text = "Max 100 dupes"
+			status.TextColor3 = Color3.fromRGB(255, 200, 100)
+			return
+		end
+
 		local target = workspace:FindFirstChild(objectName)
 
 		if not target then
@@ -146,28 +181,68 @@ local function createDupeGUI(player)
 			return
 		end
 
-		for i = 1, amount do
-			local clone = target:Clone()
-			clone.Parent = workspace
+		local success = pcall(function()
+			for i = 1, amount do
+				local clone = target:Clone()
+				clone.Parent = workspace
 
-			if clone:IsA("Model") then
-				if clone.PrimaryPart then
-					local offset = Vector3.new(i * 4, 0, 0)
-					clone:PivotTo(target:GetPivot() * CFrame.new(offset))
+				if clone:IsA("Model") then
+					if clone.PrimaryPart then
+						local offset = Vector3.new(i * 4, 0, 0)
+						clone:PivotTo(target:GetPivot() * CFrame.new(offset))
+					else
+						clone:MoveTo(target:GetPivot().Position + Vector3.new(i * 4, 0, 0))
+					end
+				elseif clone:IsA("BasePart") then
+					clone.Position = target.Position + Vector3.new(i * 4, 0, 0)
 				else
-					clone:MoveTo(target:GetPivot().Position + Vector3.new(i * 4, 0, 0))
+					clone.Position = target.Position + Vector3.new(i * 4, 0, 0)
 				end
-			elseif clone:IsA("BasePart") then
-				clone.Position = target.Position + Vector3.new(i * 4, 0, 0)
-			else
-				clone.Position = target.Position + Vector3.new(i * 4, 0, 0)
-			end
-		end
 
-		status.Text = "Duplicated " .. amount .. "x " .. objectName
-		status.TextColor3 = Color3.fromRGB(170, 255, 170)
+				wait(0.05) -- Prevent lag
+			end
+		end)
+
+		if success then
+			status.Text = "Duplicated " .. amount .. "x " .. objectName
+			status.TextColor3 = Color3.fromRGB(170, 255, 170)
+		else
+			status.Text = "Error duping object"
+			status.TextColor3 = Color3.fromRGB(255, 170, 170)
+		end
+	end)
+
+	-- Make draggable
+	local dragging = false
+	local dragStart = nil
+	local framePos = nil
+
+	mainFrame.InputBegan:Connect(function(input, gameProcessed)
+		if gameProcessed then return end
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+			dragStart = input.Position
+			framePos = mainFrame.Position
+		end
+	end)
+
+	mainFrame.InputEnded:Connect(function(input, gameProcessed)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = false
+		end
+	end)
+
+	game:GetService("UserInputService").InputChanged:Connect(function(input, gameProcessed)
+		if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+			local delta = input.Position - dragStart
+			mainFrame.Position = framePos + UDim2.new(0, delta.X, 0, delta.Y)
+		end
 	end)
 end
 
-local player = Players.LocalPlayer
-createDupeGUI(player)
+-- Run the GUI
+if player then
+	createDupeGUI()
+else
+	warn("Failed to get LocalPlayer")
+end
