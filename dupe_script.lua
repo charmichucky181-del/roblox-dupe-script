@@ -1,14 +1,11 @@
--- Universal Dupe Script - Works with all executors
+-- Universal Dupe Script - Dupe items in inventory/backpack
+-- Works with all executors
 -- Synapse X, Script-Ware, JJSploit, Oxygen U, Lua Executor, etc.
 
-local function isExecutor()
-	return getfenv()[1] ~= nil
-end
-
--- Detect executor and set appropriate variables
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer or game.Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
+local backpack = player:WaitForChild("Backpack")
 
 local function createDupeGUI()
 	local screenGui = Instance.new("ScreenGui")
@@ -19,8 +16,8 @@ local function createDupeGUI()
 
 	local mainFrame = Instance.new("Frame")
 	mainFrame.Name = "MainFrame"
-	mainFrame.Size = UDim2.new(0, 360, 0, 240)
-	mainFrame.Position = UDim2.new(0.5, -180, 0.5, -120)
+	mainFrame.Size = UDim2.new(0, 400, 0, 350)
+	mainFrame.Position = UDim2.new(0.5, -200, 0.5, -175)
 	mainFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
 	mainFrame.BorderSizePixel = 0
 	mainFrame.Parent = screenGui
@@ -38,7 +35,7 @@ local function createDupeGUI()
 	title.Name = "Title"
 	title.Size = UDim2.new(1, -20, 0, 40)
 	title.Position = UDim2.new(0, 10, 0, 10)
-	title.Text = "Dupe Tool"
+	title.Text = "Item Dupe Tool"
 	title.TextColor3 = Color3.fromRGB(255, 255, 255)
 	title.Font = Enum.Font.GothamBold
 	title.TextSize = 24
@@ -52,109 +49,285 @@ local function createDupeGUI()
 	status.Text = "Ready"
 	status.TextColor3 = Color3.fromRGB(170, 255, 170)
 	status.Font = Enum.Font.Gotham
-	status.TextSize = 14
+	status.TextSize = 12
 	status.BackgroundTransparency = 1
 	status.TextXAlignment = Enum.TextXAlignment.Left
 	status.Parent = mainFrame
 
-	local nameLabel = Instance.new("TextLabel")
-	nameLabel.Size = UDim2.new(0, 120, 0, 24)
-	nameLabel.Position = UDim2.new(0, 14, 0, 90)
-	nameLabel.Text = "Object Name"
-	nameLabel.TextColor3 = Color3.fromRGB(200, 200, 220)
-	nameLabel.Font = Enum.Font.Gotham
-	nameLabel.TextSize = 15
-	nameLabel.BackgroundTransparency = 1
-	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
-	nameLabel.Parent = mainFrame
+	-- Tabs
+	local tabFrame = Instance.new("Frame")
+	tabFrame.Size = UDim2.new(1, 0, 0, 40)
+	tabFrame.Position = UDim2.new(0, 0, 0, 70)
+	tabFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+	tabFrame.BorderSizePixel = 0
+	tabFrame.Parent = mainFrame
 
-	local objectBox = Instance.new("TextBox")
-	objectBox.Size = UDim2.new(1, -30, 0, 38)
-	objectBox.Position = UDim2.new(0, 15, 0, 116)
-	objectBox.PlaceholderText = "Ex: Tree"
-	objectBox.Text = ""
-	objectBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-	objectBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 180)
-	objectBox.BackgroundColor3 = Color3.fromRGB(40, 40, 52)
-	objectBox.BorderSizePixel = 0
-	objectBox.Font = Enum.Font.Gotham
-	objectBox.TextSize = 18
-	objectBox.Parent = mainFrame
+	local tabCorner = Instance.new("UICorner")
+	tabCorner.CornerRadius = UDim.new(0, 8)
+	tabCorner.Parent = tabFrame
 
-	local corner2 = Instance.new("UICorner")
-	corner2.CornerRadius = UDim.new(0, 10)
-	corner2.Parent = objectBox
+	local tab1Btn = Instance.new("TextButton")
+	tab1Btn.Size = UDim2.new(0.5, -2, 1, 0)
+	tab1Btn.Position = UDim2.new(0, 0, 0, 0)
+	tab1Btn.Text = "Your Backpack"
+	tab1Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	tab1Btn.BackgroundColor3 = Color3.fromRGB(96, 110, 255)
+	tab1Btn.BorderSizePixel = 0
+	tab1Btn.Font = Enum.Font.GothamBold
+	tab1Btn.TextSize = 14
+	tab1Btn.Parent = tabFrame
 
-	local amountLabel = Instance.new("TextLabel")
-	amountLabel.Size = UDim2.new(0, 120, 0, 24)
-	amountLabel.Position = UDim2.new(0, 14, 0, 165)
-	amountLabel.Text = "Amount"
-	amountLabel.TextColor3 = Color3.fromRGB(200, 200, 220)
-	amountLabel.Font = Enum.Font.Gotham
-	amountLabel.TextSize = 15
-	amountLabel.BackgroundTransparency = 1
-	amountLabel.TextXAlignment = Enum.TextXAlignment.Left
-	amountLabel.Parent = mainFrame
+	local tab1Corner = Instance.new("UICorner")
+	tab1Corner.CornerRadius = UDim.new(0, 8)
+	tab1Corner.Parent = tab1Btn
 
-	local amountBox = Instance.new("TextBox")
-	amountBox.Size = UDim2.new(0, 90, 0, 32)
-	amountBox.Position = UDim2.new(0, 15, 0, 188)
-	amountBox.Text = "1"
-	amountBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-	amountBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 180)
-	amountBox.BackgroundColor3 = Color3.fromRGB(40, 40, 52)
-	amountBox.BorderSizePixel = 0
-	amountBox.Font = Enum.Font.GothamBold
-	amountBox.TextSize = 16
-	amountBox.Parent = mainFrame
+	local tab2Btn = Instance.new("TextButton")
+	tab2Btn.Size = UDim2.new(0.5, -2, 1, 0)
+	tab2Btn.Position = UDim2.new(0.5, 2, 0, 0)
+	tab2Btn.Text = "Dupe Workspace"
+	tab2Btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+	tab2Btn.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+	tab2Btn.BorderSizePixel = 0
+	tab2Btn.Font = Enum.Font.GothamBold
+	tab2Btn.TextSize = 14
+	tab2Btn.Parent = tabFrame
 
-	local amountCorner = Instance.new("UICorner")
-	amountCorner.CornerRadius = UDim.new(0, 8)
-	amountCorner.Parent = amountBox
+	local tab2Corner = Instance.new("UICorner")
+	tab2Corner.CornerRadius = UDim.new(0, 8)
+	tab2Corner.Parent = tab2Btn
 
-	local button = Instance.new("TextButton")
-	button.Size = UDim2.new(0, 140, 0, 40)
-	button.Position = UDim2.new(1, -150, 0, 188)
-	button.Text = "Duplicate"
-	button.TextColor3 = Color3.fromRGB(255, 255, 255)
-	button.BackgroundColor3 = Color3.fromRGB(96, 110, 255)
-	button.BorderSizePixel = 0
-	button.Font = Enum.Font.GothamBold
-	button.TextSize = 18
-	button.Parent = mainFrame
+	-- TAB 1: Backpack Mode
+	local tab1Container = Instance.new("Frame")
+	tab1Container.Name = "Tab1"
+	tab1Container.Size = UDim2.new(1, -20, 1, -130)
+	tab1Container.Position = UDim2.new(0, 10, 0, 115)
+	tab1Container.BackgroundTransparency = 1
+	tab1Container.Visible = true
+	tab1Container.Parent = mainFrame
 
-	local buttonCorner = Instance.new("UICorner")
-	buttonCorner.CornerRadius = UDim.new(0, 10)
-	buttonCorner.Parent = button
+	local itemsLabel = Instance.new("TextLabel")
+	itemsLabel.Size = UDim2.new(1, 0, 0, 20)
+	itemsLabel.Position = UDim2.new(0, 0, 0, 0)
+	itemsLabel.Text = "Items in your Backpack:"
+	itemsLabel.TextColor3 = Color3.fromRGB(200, 200, 220)
+	itemsLabel.Font = Enum.Font.Gotham
+	itemsLabel.TextSize = 12
+	itemsLabel.BackgroundTransparency = 1
+	itemsLabel.TextXAlignment = Enum.TextXAlignment.Left
+	itemsLabel.Parent = tab1Container
 
-	local buttonStroke = Instance.new("UIStroke")
-	buttonStroke.Color = Color3.fromRGB(140, 150, 255)
-	buttonStroke.Thickness = 1
-	buttonStroke.Parent = button
+	local itemsList = Instance.new("ScrollingFrame")
+	itemsList.Size = UDim2.new(1, 0, 1, -80)
+	itemsList.Position = UDim2.new(0, 0, 0, 25)
+	itemsList.BackgroundColor3 = Color3.fromRGB(40, 40, 52)
+	itemsList.BorderSizePixel = 0
+	itemsList.ScrollBarThickness = 8
+	itemsList.Parent = tab1Container
 
-	-- Close button
-	local closeBtn = Instance.new("TextButton")
-	closeBtn.Size = UDim2.new(0, 30, 0, 30)
-	closeBtn.Position = UDim2.new(1, -35, 0, 5)
-	closeBtn.Text = "X"
-	closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	closeBtn.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
-	closeBtn.BorderSizePixel = 0
-	closeBtn.Font = Enum.Font.GothamBold
-	closeBtn.TextSize = 18
-	closeBtn.Parent = mainFrame
+	local listCorner = Instance.new("UICorner")
+	listCorner.CornerRadius = UDim.new(0, 8)
+	listCorner.Parent = itemsList
 
-	local closeCorner = Instance.new("UICorner")
-	closeCorner.CornerRadius = UDim.new(0, 8)
-	closeCorner.Parent = closeBtn
+	local listLayout = Instance.new("UIListLayout")
+	listLayout.Padding = UDim.new(0, 5)
+	listLayout.Parent = itemsList
 
-	closeBtn.MouseButton1Click:Connect(function()
-		screenGui:Destroy()
+	local selectedItem = nil
+
+	local function refreshItemsList()
+		for _, child in ipairs(itemsList:GetChildren()) do
+			if child:IsA("TextButton") then
+				child:Destroy()
+			end
+		end
+
+		for _, item in ipairs(backpack:GetChildren()) do
+			if item:IsA("Tool") or item:IsA("Model") or item:IsA("Part") then
+				local itemBtn = Instance.new("TextButton")
+				itemBtn.Size = UDim2.new(1, -10, 0, 35)
+				itemBtn.Text = item.Name
+				itemBtn.TextColor3 = Color3.fromRGB(200, 200, 220)
+				itemBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+				itemBtn.BorderSizePixel = 0
+				itemBtn.Font = Enum.Font.Gotham
+				itemBtn.TextSize = 13
+				itemBtn.Parent = itemsList
+
+				local btnCorner = Instance.new("UICorner")
+				btnCorner.CornerRadius = UDim.new(0, 6)
+				btnCorner.Parent = itemBtn
+
+				itemBtn.MouseButton1Click:Connect(function()
+					selectedItem = item
+					for _, btn in ipairs(itemsList:GetChildren()) do
+						if btn:IsA("TextButton") then
+							btn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+							btn.TextColor3 = Color3.fromRGB(200, 200, 220)
+						end
+					end
+					itemBtn.BackgroundColor3 = Color3.fromRGB(96, 110, 255)
+					itemBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+					status.Text = "Selected: " .. item.Name
+					status.TextColor3 = Color3.fromRGB(170, 200, 255)
+				end)
+			end
+		end
+
+		local spacer = Instance.new("Frame")
+		spacer.Size = UDim2.new(1, 0, 0, 0)
+		spacer.Parent = itemsList
+	end
+
+	local amountLabel1 = Instance.new("TextLabel")
+	amountLabel1.Size = UDim2.new(0, 120, 0, 20)
+	amountLabel1.Position = UDim2.new(0, 0, 1, -50)
+	amountLabel1.Text = "Amount:"
+	amountLabel1.TextColor3 = Color3.fromRGB(200, 200, 220)
+	amountLabel1.Font = Enum.Font.Gotham
+	amountLabel1.TextSize = 12
+	amountLabel1.BackgroundTransparency = 1
+	amountLabel1.TextXAlignment = Enum.TextXAlignment.Left
+	amountLabel1.Parent = tab1Container
+
+	local amountBox1 = Instance.new("TextBox")
+	amountBox1.Size = UDim2.new(0, 80, 0, 30)
+	amountBox1.Position = UDim2.new(0, 100, 1, -50)
+	amountBox1.Text = "1"
+	amountBox1.TextColor3 = Color3.fromRGB(255, 255, 255)
+	amountBox1.BackgroundColor3 = Color3.fromRGB(40, 40, 52)
+	amountBox1.BorderSizePixel = 0
+	amountBox1.Font = Enum.Font.GothamBold
+	amountBox1.TextSize = 14
+	amountBox1.Parent = tab1Container
+
+	local box1Corner = Instance.new("UICorner")
+	box1Corner.CornerRadius = UDim.new(0, 8)
+	box1Corner.Parent = amountBox1
+
+	local dupeBtn1 = Instance.new("TextButton")
+	dupeBtn1.Size = UDim2.new(1, -200, 0, 30)
+	dupeBtn1.Position = UDim2.new(0, 190, 1, -50)
+	dupeBtn1.Text = "Duplicate Selected"
+	dupeBtn1.TextColor3 = Color3.fromRGB(255, 255, 255)
+	dupeBtn1.BackgroundColor3 = Color3.fromRGB(96, 110, 255)
+	dupeBtn1.BorderSizePixel = 0
+	dupeBtn1.Font = Enum.Font.GothamBold
+	dupeBtn1.TextSize = 12
+	dupeBtn1.Parent = tab1Container
+
+	local btn1Corner = Instance.new("UICorner")
+	btn1Corner.CornerRadius = UDim.new(0, 8)
+	btn1Corner.Parent = dupeBtn1
+
+	dupeBtn1.MouseButton1Click:Connect(function()
+		if not selectedItem then
+			status.Text = "Select an item first!"
+			status.TextColor3 = Color3.fromRGB(255, 170, 170)
+			return
+		end
+
+		local amount = tonumber(amountBox1.Text) or 1
+		if amount < 1 then amount = 1 end
+		if amount > 50 then amount = 50 end
+
+		local success = pcall(function()
+			for i = 1, amount do
+				local clone = selectedItem:Clone()
+				clone.Parent = backpack
+				wait(0.05)
+			end
+		end)
+
+		if success then
+			status.Text = "Duplicated " .. amount .. "x " .. selectedItem.Name
+			status.TextColor3 = Color3.fromRGB(170, 255, 170)
+		else
+			status.Text = "Error duplicating item"
+			status.TextColor3 = Color3.fromRGB(255, 170, 170)
+		end
 	end)
 
-	button.MouseButton1Click:Connect(function()
-		local objectName = objectBox.Text
-		local amount = tonumber(amountBox.Text) or 1
+	-- TAB 2: Workspace Mode
+	local tab2Container = Instance.new("Frame")
+	tab2Container.Name = "Tab2"
+	tab2Container.Size = UDim2.new(1, -20, 1, -130)
+	tab2Container.Position = UDim2.new(0, 10, 0, 115)
+	tab2Container.BackgroundTransparency = 1
+	tab2Container.Visible = false
+	tab2Container.Parent = mainFrame
+
+	local wsNameLabel = Instance.new("TextLabel")
+	wsNameLabel.Size = UDim2.new(0, 120, 0, 20)
+	wsNameLabel.Position = UDim2.new(0, 0, 0, 0)
+	wsNameLabel.Text = "Object Name:"
+	wsNameLabel.TextColor3 = Color3.fromRGB(200, 200, 220)
+	wsNameLabel.Font = Enum.Font.Gotham
+	wsNameLabel.TextSize = 12
+	wsNameLabel.BackgroundTransparency = 1
+	wsNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+	wsNameLabel.Parent = tab2Container
+
+	local wsNameBox = Instance.new("TextBox")
+	wsNameBox.Size = UDim2.new(1, 0, 0, 30)
+	wsNameBox.Position = UDim2.new(0, 0, 0, 25)
+	wsNameBox.PlaceholderText = "Ex: Sword, Tree, Part"
+	wsNameBox.Text = ""
+	wsNameBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+	wsNameBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 180)
+	wsNameBox.BackgroundColor3 = Color3.fromRGB(40, 40, 52)
+	wsNameBox.BorderSizePixel = 0
+	wsNameBox.Font = Enum.Font.Gotham
+	wsNameBox.TextSize = 14
+	wsNameBox.Parent = tab2Container
+
+	local wsBox1Corner = Instance.new("UICorner")
+	wsBox1Corner.CornerRadius = UDim.new(0, 8)
+	wsBox1Corner.Parent = wsNameBox
+
+	local wsAmountLabel = Instance.new("TextLabel")
+	wsAmountLabel.Size = UDim2.new(0, 120, 0, 20)
+	wsAmountLabel.Position = UDim2.new(0, 0, 0, 65)
+	wsAmountLabel.Text = "Amount:"
+	wsAmountLabel.TextColor3 = Color3.fromRGB(200, 200, 220)
+	wsAmountLabel.Font = Enum.Font.Gotham
+	wsAmountLabel.TextSize = 12
+	wsAmountLabel.BackgroundTransparency = 1
+	wsAmountLabel.TextXAlignment = Enum.TextXAlignment.Left
+	wsAmountLabel.Parent = tab2Container
+
+	local wsAmountBox = Instance.new("TextBox")
+	wsAmountBox.Size = UDim2.new(0, 80, 0, 30)
+	wsAmountBox.Position = UDim2.new(0, 0, 0, 90)
+	wsAmountBox.Text = "1"
+	wsAmountBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+	wsAmountBox.BackgroundColor3 = Color3.fromRGB(40, 40, 52)
+	wsAmountBox.BorderSizePixel = 0
+	wsAmountBox.Font = Enum.Font.GothamBold
+	wsAmountBox.TextSize = 14
+	wsAmountBox.Parent = tab2Container
+
+	local wsBox2Corner = Instance.new("UICorner")
+	wsBox2Corner.CornerRadius = UDim.new(0, 8)
+	wsBox2Corner.Parent = wsAmountBox
+
+	local dupeBtn2 = Instance.new("TextButton")
+	dupeBtn2.Size = UDim2.new(1, -100, 0, 30)
+	dupeBtn2.Position = UDim2.new(0, 100, 0, 90)
+	dupeBtn2.Text = "Duplicate"
+	dupeBtn2.TextColor3 = Color3.fromRGB(255, 255, 255)
+	dupeBtn2.BackgroundColor3 = Color3.fromRGB(96, 110, 255)
+	dupeBtn2.BorderSizePixel = 0
+	dupeBtn2.Font = Enum.Font.GothamBold
+	dupeBtn2.TextSize = 12
+	dupeBtn2.Parent = tab2Container
+
+	local btn2Corner = Instance.new("UICorner")
+	btn2Corner.CornerRadius = UDim.new(0, 8)
+	btn2Corner.Parent = dupeBtn2
+
+	dupeBtn2.MouseButton1Click:Connect(function()
+		local objectName = wsNameBox.Text
+		local amount = tonumber(wsAmountBox.Text) or 1
 
 		if objectName == "" then
 			status.Text = "Type an object name"
@@ -162,16 +335,8 @@ local function createDupeGUI()
 			return
 		end
 
-		if amount < 1 then
-			amount = 1
-		end
-
-		if amount > 100 then
-			amount = 100
-			status.Text = "Max 100 dupes"
-			status.TextColor3 = Color3.fromRGB(255, 200, 100)
-			return
-		end
+		if amount < 1 then amount = 1 end
+		if amount > 100 then amount = 100 end
 
 		local target = workspace:FindFirstChild(objectName)
 
@@ -195,11 +360,9 @@ local function createDupeGUI()
 					end
 				elseif clone:IsA("BasePart") then
 					clone.Position = target.Position + Vector3.new(i * 4, 0, 0)
-				else
-					clone.Position = target.Position + Vector3.new(i * 4, 0, 0)
 				end
 
-				wait(0.05) -- Prevent lag
+				wait(0.05)
 			end
 		end)
 
@@ -207,12 +370,52 @@ local function createDupeGUI()
 			status.Text = "Duplicated " .. amount .. "x " .. objectName
 			status.TextColor3 = Color3.fromRGB(170, 255, 170)
 		else
-			status.Text = "Error duping object"
+			status.Text = "Error duplicating"
 			status.TextColor3 = Color3.fromRGB(255, 170, 170)
 		end
 	end)
 
-	-- Make draggable
+	-- Tab switching
+	tab1Btn.MouseButton1Click:Connect(function()
+		tab1Container.Visible = true
+		tab2Container.Visible = false
+		tab1Btn.BackgroundColor3 = Color3.fromRGB(96, 110, 255)
+		tab1Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		tab2Btn.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+		tab2Btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+		refreshItemsList()
+	end)
+
+	tab2Btn.MouseButton1Click:Connect(function()
+		tab1Container.Visible = false
+		tab2Container.Visible = true
+		tab2Btn.BackgroundColor3 = Color3.fromRGB(96, 110, 255)
+		tab2Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		tab1Btn.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+		tab1Btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+	end)
+
+	-- Close button
+	local closeBtn = Instance.new("TextButton")
+	closeBtn.Size = UDim2.new(0, 30, 0, 30)
+	closeBtn.Position = UDim2.new(1, -35, 0, 5)
+	closeBtn.Text = "X"
+	closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	closeBtn.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
+	closeBtn.BorderSizePixel = 0
+	closeBtn.Font = Enum.Font.GothamBold
+	closeBtn.TextSize = 18
+	closeBtn.Parent = mainFrame
+
+	local closeCorner = Instance.new("UICorner")
+	closeCorner.CornerRadius = UDim.new(0, 8)
+	closeCorner.Parent = closeBtn
+
+	closeBtn.MouseButton1Click:Connect(function()
+		screenGui:Destroy()
+	end)
+
+	-- Draggable
 	local dragging = false
 	local dragStart = nil
 	local framePos = nil
@@ -238,9 +441,24 @@ local function createDupeGUI()
 			mainFrame.Position = framePos + UDim2.new(0, delta.X, 0, delta.Y)
 		end
 	end)
+
+	-- Initial load
+	refreshItemsList()
+
+	-- Refresh items when backpack changes
+	backpack.ChildAdded:Connect(function()
+		if tab1Container.Visible then
+			refreshItemsList()
+		end
+	end)
+
+	backpack.ChildRemoved:Connect(function()
+		if tab1Container.Visible then
+			refreshItemsList()
+		end
+	end)
 end
 
--- Run the GUI
 if player then
 	createDupeGUI()
 else
